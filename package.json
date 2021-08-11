@@ -1,0 +1,25 @@
+{
+  "name": "watering",
+  "version": "1.0.0",
+  "description": "## Requirements",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/micheledisalvatore/plant-watering-raspberry-pi-nodejs.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/micheledisalvatore/plant-watering-raspberry-pi-nodejs/issues"
+  },
+  "homepage": "https://github.com/micheledisalvatore/plant-watering-raspberry-pi-nodejs#readme",
+  "dependencies": {
+    "mcp-spi-adc": "^3.1.1",
+    "node-schedule": "^2.0.0",
+    "onoff": "^6.0.3"
+  }
+}
