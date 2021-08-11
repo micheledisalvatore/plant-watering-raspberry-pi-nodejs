@@ -1,31 +1,72 @@
 // Setup the sensor input
 const mcpadc = require('mcp-spi-adc');
 const Gpio = require('onoff').Gpio;
-const schedule = require('node-schedule');x
+const schedule = require('node-schedule');
 
 // const completelyWet = 395;
 // const completelyDry = 780;
-// const pumpRelay = new Gpio(17, 'high'); // IMPORTANT: Use 'high' if relay uses low level trigger
+const pumpRelay = new Gpio(23, 'high'); // IMPORTANT: Use 'high' if relay uses low level trigger
 const humiditySensor = new Gpio(17, 'in');
 
-const readHumidity = async () => new Promise((resolve, reject) => {
-  humiditySensor.read(async (error, status) => {
-    if (error) {
-      return reject(new Error(`There was an error getting the humidity sensor status: ${error}`));
-    }
+const checkIsWet = async () => {
+  const humidity = await new Promise((resolve, reject) => {
+    humiditySensor.read(async (error, status) => {
+      if (error) {
+        return reject(new Error(`There was an error getting the humidity sensor status: ${error}`));
+      }
 
-    return resolve({
-      status,
+      return resolve(status);
     });
-  });  
-})
+  })
 
-const execute = async () => {
-  const humidity = await readHumidity()
-  console.log('humidity', humidity)
+  return humidity === 0
 }
 
-execute()
+const checkIsWatering = async () => {
+  const relayStatus = await  new Promise((resolve, reject) => {
+    pumpRelay.read((error, status) => {
+      if (error) {
+        return reject(new Error(`There was an error getting the pump relay status: ${error}`));
+      }
+
+      return resolve(status)
+    });
+  });
+
+  return relayStatus === 0
+}
+
+const startWatering = async () => {
+  const isWatering = await checkIsWatering()
+  if (!isWatering) {
+    pumpRelay.writeSync(0)
+  }
+}
+
+const stopWatering = async () => {
+  const isWatering = await checkIsWatering()
+  if (isWatering) {
+    pumpRelay.writeSync(1); // opens the circuit and stops the pump
+  }
+}
+
+const waterThePlant = async () => {
+  const isWet = await checkIsWet()
+  const isWatering = await checkIsWatering()
+  console.log('isWet', isWet)
+  console.log('isWatering', isWatering)
+  if (!isWet && !isWatering) {
+    console.log('starting watering')
+    await startWatering()
+    console.log('watering')
+    setTimeout(() => {
+	    stopWatering()
+	    console.log('stopped watering')
+    }, 1500)
+  }
+}
+
+setInterval(() => waterThePlant(), 1000)
 
 
 // function getSensorReadings(sensor) {
