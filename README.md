@@ -92,3 +92,7 @@ Run this command in cli `git clone https://github.com/micheledisalvatore/plant-w
 
 Enter into the project directory `cd plant-watering-raspberry-pi-nodejs` and install the dependencies `npm install`
 
+
+## Credits
+- [Watering Plants with a Raspberry Pi](https://medium.com/going-fullstack/watering-plants-with-a-raspberry-pi-36eac51b8d23)
+
