@@ -1,73 +1,84 @@
 const Gpio = require('onoff').Gpio;
 const schedule = require('node-schedule');
 
-const pumpRelay = new Gpio(23, 'high');
+const pumpRelay = new Gpio(23, 'out');
 const humiditySensor = new Gpio(17, 'in');
 
-const checkIsWet = async () => {
-  const humidityStatus = await new Promise((resolve, reject) => {
-    humiditySensor.read(async (error, status) => {
-      if (error) {
-        return reject(new Error(`There was an error getting the humidity sensor status: ${error}`));
-      }
+const RECURRENCE_RULE = new schedule.RecurrenceRule();
+RECURRENCE_RULE.hour = 11;
 
-      return resolve(status);
-    });
-  })
+const WATERING_DURATION = 20000
 
-  return humidityStatus === 0
+const checkIsWet = () => {
+  const isWet = humiditySensor.readSync() === 0
+  console.log('The soil is', isWet ? 'wet' : 'dry')
+
+  return isWet
 }
 
-const checkIsWatering = async () => {
-  const relayStatus = await  new Promise((resolve, reject) => {
-    pumpRelay.read((error, status) => {
-      if (error) {
-        return reject(new Error(`There was an error getting the pump relay status: ${error}`));
-      }
+const checkIsWatering = () => {
+  const isWatering =  pumpRelay.readSync() === 1
+  console.log('The water pump is', isWatering ? 'active' : 'inactive')
 
-      return resolve(status)
-    });
-  });
-
-  return relayStatus === 0
+  return isWatering
 }
 
-const startWatering = async () => {
-  const isWatering = await checkIsWatering()
-  if (!isWatering) {
-    pumpRelay.writeSync(0)
-  }
+const startWatering = () => {
+  console.log('Turning pump on')
+  pumpRelay.writeSync(1)
 }
 
 const stopWatering = async () => {
-  const isWatering = await checkIsWatering()
-  if (isWatering) {
-    pumpRelay.writeSync(1);
-  }
+  console.log('Turning pump off')
+  pumpRelay.writeSync(0);
 }
 
-const sleep = async (time = 1000) => await new Promise(resolve => setTimeout(resolve, time));
+const sleep = async (time = 1000) => {
+  console.log('Executing time', time)
+
+  return await new Promise(resolve => setTimeout(resolve, time));
+}
 
 const waterThePlant = async () => {
-  const isWet = await checkIsWet()
-  const isWatering = await checkIsWatering()
-  console.log('isWet', isWet)
-  console.log('isWatering', isWatering)
-  if (!isWet && !isWatering) {
-    console.log('starting watering')
-    await startWatering()
-    console.log('watering')
-    await sleep(1500)
-    await stopWatering()
-    console.log('stopped watering')
+  console.group('Water the plant')
+  
+  try {
+    const isWet = checkIsWet()
+    const isWatering = checkIsWatering()
+    
+    if (!isWet && !isWatering) {
+      startWatering()
+     
+      await sleep(WATERING_DURATION)
+      
+      stopWatering()
+    }
+  } catch (e) {
+    console.error(e)
   }
+  
+  console.groupEnd()
 }
 
 const init = () => {
-  schedule.scheduleJob('0 7 * * *', async () => {
+  schedule.scheduleJob(RECURRENCE_RULE, async () => {
     await waterThePlant()
   });
 };
- 
-// init();
-setInterval(() => waterThePlant(), 3000)
+
+process.stdin.resume();//so the program will not close instantly
+
+function exitHandler(options) {
+  stopWatering()
+  if (options.exit) {
+    process.exit();
+  }
+}
+
+process.on('exit', exitHandler.bind(null,{cleanup:true}));
+process.on('SIGINT', exitHandler.bind(null, {exit:true}));
+process.on('SIGUSR1', exitHandler.bind(null, {exit:true}));
+process.on('SIGUSR2', exitHandler.bind(null, {exit:true}));
+process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
+
+init();
