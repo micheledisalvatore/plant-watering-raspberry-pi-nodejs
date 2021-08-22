@@ -6,7 +6,7 @@ After=network.target
 Type=simple
 Restart=on-failure
 #User=server
-WorkingDirectory=/home/pi/watering
+WorkingDirectory=/home/pi/plant-watering-raspberry-pi-nodejs
 ExecStart=/usr/local/bin/node index.js
 RestartSec=10
 
