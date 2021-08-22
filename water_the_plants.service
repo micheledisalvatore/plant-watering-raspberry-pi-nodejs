@@ -1,0 +1,14 @@
+[Unit]
+Description=Water The Plants
+After=network.target
+
+[Service]
+Type=simple
+Restart=on-failure
+#User=server
+WorkingDirectory=/home/pi/watering
+ExecStart=/usr/local/bin/node index.js
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
