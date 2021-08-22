@@ -40,6 +40,16 @@
 | 1      | Pin 16 (GPIO 23) |
 | 2      | Pin 18 (GPIO 24) |
 
+### Connect the water pump to the relay
+
+Cut the USB terminal, strip the 2 small wires: a black wire and a red wire. Then connet the Water Pump to the Relay and the USB male plag
+
+| | | |
+|-|-|-|
+|**Black** Pump Wire | ↔ | **Negative (-)** port of USB male plug|
+|**Positive (+)** port of USB male plug | ↔ | **COM** port of relay Channel 1\
+|**Red** Pump Wire | ↔ | **NO** port of relay Channel 1|
+
 ## Setup your Raspberry Pi Zero
 
 1. Download [Raspberry Pi OS Lite](https://www.raspberrypi.org/software/operating-systems/)
@@ -92,7 +102,22 @@ Run this command in cli `git clone https://github.com/micheledisalvatore/plant-w
 
 Enter into the project directory `cd plant-watering-raspberry-pi-nodejs` and install the dependencies `npm install`
 
+### Edit the running time
+
+Edit the `index.js` file and set the time you prefer for when you want to run the script, the current configuration starts the script every day at 11.00 and it runs for 20 seconds (20000 ms). For more infor on how to set up you recurrence, check the [documentation of the node-schedule package](https://www.npmjs.com/package/node-schedule#user-content-recurrence-rule-scheduling)
+
+### Run the script when the Raspberry Pi restarts (optional)
+
+In order to automatically start this script any time the Raspberry Pi starts, follow the following steps:
+https://github.com/micheledisalvatore/plant-watering-raspberry-pi-nodejs/blob/master/water_the_plants.service
+
+1. copy the service configuration script `sudo cp water_the_plants.service /lib/systemd/system/water_the_plants.service`
+2. restart the daemon `sudo systemctl daemon-reload`
+3. start the service `sudo systemctl start water_the_plants`
+4. enable the auto start `sudo systemctl enable water_the_plants`
+
 
 ## Credits
 - [Watering Plants with a Raspberry Pi](https://medium.com/going-fullstack/watering-plants-with-a-raspberry-pi-36eac51b8d23)
+- [Arduino - Control Pump](https://arduinogetstarted.com/tutorials/arduino-controls-pump)
 
